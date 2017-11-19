@@ -39,14 +39,18 @@ class PersonImage(models.Model):
 
 class AdoptionProposal(models.Model):
     """ Proposal of adoption made by one person """
-    adopter = models.ForeignKey(Person, related_name="adopter",
-                                on_delete=models.CASCADE, blank=True, null=True)
+    STATUSES = (
+        (0, 'CANCELADA'),
+        (1, 'ACEPTADA'),
+        (2, 'EN ESPERA')
+    )
     owner = models.ForeignKey(Person, related_name="owner",
                               on_delete=models.CASCADE, blank=True, null=True)
     pet_name = models.CharField(max_length=50, blank=True, null=True,
                                 default="Sin nombre")
     description = models.TextField(blank=True, null=True)
-    was_selected = models.BooleanField(default=True)
+    status = models.IntegerField(choices=STATUSES, default=2)
+    was_deleted = models.BooleanField(default=False)
     date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
@@ -54,6 +58,28 @@ class AdoptionProposal(models.Model):
         if self.description:
             description = self.description
         return self.owner.user.get_full_name() + ' - ' + description
+
+
+class AdoptionRequest(models.Model):
+    """ Request to adopt associated to a proposal """
+    STATUSES = (
+        (0, 'CANCELADA'),
+        (1, 'ACEPTADA'),
+        (2, 'EN ESPERA')
+    )
+    adoption_proposal = models.ForeignKey(AdoptionProposal,
+                                          on_delete=models.CASCADE)
+    requester = models.ForeignKey(Person, on_delete=models.CASCADE)
+    description = models.TextField(blank=True, null=True, default='')
+    status = models.IntegerField(choices=STATUSES, default=2)
+    was_deleted = models.BooleanField(default=False)
+    date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        description = 'Sin descripción'
+        if self.description:
+            description = self.description
+        return self.requester.user.get_full_name() + ' - ' + description
 
 
 class AdoptionImage(models.Model):

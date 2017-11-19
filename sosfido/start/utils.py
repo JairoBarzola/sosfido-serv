@@ -1,11 +1,12 @@
 """ Utils for start app """
+import requests
 from datetime import timezone, datetime, timedelta
 from sosfido import settings
 from django.contrib.auth.models import User
 from oauth2_provider.models import Application, AccessToken
 from oauthlib.common import generate_token
 
-from start.models import Person, Place
+from start.models import Person, Place, PersonDevice
 from start.serializers import TokenSerializer
 
 
@@ -91,3 +92,43 @@ def create_user(dict_post):
         return user
     else:
         return None
+
+
+def find_devices(id_person):
+    """
+    Method to return a list of devices associated to a person
+    """
+    list_devices = []
+    if (PersonDevice.objects.filter(person__id=id_person,
+                                    is_user_active=True).exists()):
+        list_devices = list(PersonDevice.objects.filter(person__id=id_person,
+                                                        is_user_active=True)
+                            .values_list('id_device', flat=True))
+    return list_devices
+
+
+def send_notification_mobile(list_devices, title, message, data_notification,
+                             image_notification):
+    """ Method used to send notifications to mobile """
+    if len(list_devices) > 0:
+        url = 'https://onesignal.com/api/v1/notifications'
+        headers = {'Authorization':
+                       'Y2NmYzRjZmItMTAxMy00YzlkLWFhZDYtNjNkNzhjNTlkZGMx',
+                   'Content-Type': 'application/json'}
+        payload = {'app_id': '340e9d3e-5e29-436f-a9d2-bc3c6b178e06',
+                   'include_player_ids': list_devices,
+                   'data': data_notification,
+                   'headings': {'en': title},
+                   'contents': {'en': message},
+                   'large_icon': image_notification,
+                   'android_accent_color': 'C3D100',
+                   'android_led_color': 'C3D100',
+                   'android_visibility': 1,
+                   'priority': 10}
+        request_notification = requests.post(url, headers=headers, json=payload)
+        if request_notification.status_code == 200:
+            return True
+        else:
+            return False
+    else:
+        return False

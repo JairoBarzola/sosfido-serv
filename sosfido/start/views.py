@@ -19,11 +19,11 @@ from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication,\
     BasicAuthentication
 from start.models import Person, Place, PersonImage, ReportImage, AnimalReport, \
-    AdoptionImage, PersonDevice, AdoptionProposal
+    AdoptionImage, PersonDevice, AdoptionProposal, AdoptionRequest
 from start.serializers import PersonSerializer, PlaceSerializer, \
     ApplicationSerializer, PersonImageSerializer, ReportImageSerializer, \
     AnimalReportSerializer, AdoptionImageSerializer, AdoptionProposalSerializer, \
-    PersonDeviceSerializer
+    PersonDeviceSerializer, AdoptionRequestSerializer
 from start.utils import create_user
 
 
@@ -185,8 +185,12 @@ class AuthenticateUserAPI(APIView):
                 request_content = requests.post(url)
                 response_json = request_content.json()
                 person_id = Person.objects.get(user=user).id
+                is_registered = (PersonDevice.objects
+                                 .filter(person__id=person_id).exists())
                 return Response({'access_token': response_json['access_token'],
-                                 'person_id': person_id, 'status': True},
+                                 'person_id': person_id,
+                                 'status': True,
+                                 'is_registered': is_registered},
                                 status=status.HTTP_200_OK)
         return Response({'status': False})
 
@@ -332,10 +336,42 @@ class AdoptionProposalAPI(ModelViewSet):
         queryset = []
         if 'owner_id' in self.request.GET:
             queryset = (AdoptionProposal.objects
-                        .filter(owner__id=self.request.GET['owner_id']))
+                        .filter(owner__id=self.request.GET['owner_id'],
+                                was_deleted=False))
         elif 'all_adoptions' in self.request.GET:
             queryset = (AdoptionProposal.objects
-                        .filter(date__gt=datetime.now()-timedelta(days=15)))
+                        .filter(date__gt=datetime.now()-timedelta(days=15),
+                                was_deleted=False, status=2))
+        else:
+            queryset = AdoptionProposal.objects.filter(was_deleted=False)
+        return queryset
+
+
+class AdoptionRequestAPI(ModelViewSet):
+    """ API view to manage requests for adoption proposals """
+    authentication_classes = [OAuth2Authentication]
+    permission_classes = [IsAuthenticated]
+    serializer_class = AdoptionRequestSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        """ Redefinition of queryset for the view """
+        queryset = []
+        if 'requester_id' in self.request.GET:
+            queryset = (AdoptionRequest.objects
+                        .filter(requester__id=self.request.GET['requester_id'],
+                                was_deleted=False))
+        elif 'all_requests' in self.request.GET:
+            queryset = (AdoptionRequest.objects
+                        .filter(date__gt=datetime.now()-timedelta(days=15),
+                                was_deleted=False, status=2))
+        elif 'proposal_id' in self.request.GET:
+            queryset = (AdoptionRequest.objects
+                        .filter(date__gt=datetime.now()-timedelta(days=15),
+                                adoption_proposal__id=self.request
+                                .GET['proposal_id'], was_deleted=False))
+        else:
+            queryset = AdoptionRequest.objects.filter(was_deleted=False)
         return queryset
 
 

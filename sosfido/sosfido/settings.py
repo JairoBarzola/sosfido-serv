@@ -27,7 +27,7 @@ DEBUG = True
 
 # Global Variables
 SERVER_HOST = '34.211.179.199:80'
-IMAGE_HOST = 'sosfido.tk'
+IMAGE_HOST = 'http://sosfido.tk'
 
 ALLOWED_HOSTS = ['*']
 
@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'start',
     'rest_framework',
     'corsheaders',
-    'oauth2_provider'
+    'oauth2_provider',
+    'web',
 ]
 
 MIDDLEWARE = [
@@ -89,8 +90,12 @@ WSGI_APPLICATION = 'sosfido.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'db_sosfido',
+        'USER': 'sosfido',
+        'PASSWORD': 'sosfido',
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 

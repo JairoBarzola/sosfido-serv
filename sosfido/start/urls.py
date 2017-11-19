@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 from start.views import AuthenticateUserAPI, PersonAPI, LocationAPI, \
     ValidateLoginAjax, Index, RegisterUserAPI, LogoutAPI, PersonImageAPI, \
     AnimalReportAPI, ReportImageAPI, AdoptionImageAPI, AdoptionProposalAPI, \
-    PersonDeviceAPI, UpdatePasswordAPI, FindUserAPI
+    PersonDeviceAPI, UpdatePasswordAPI, FindUserAPI, AdoptionRequestAPI
 
 app_name = 'start'
 
@@ -44,6 +44,12 @@ urlpatterns = [
         AdoptionProposalAPI.as_view({'get': 'retrieve',
                                      'patch': 'partial_update',
                                      'delete': 'destroy'})),
+    url(r'^adoption-request-api/$',
+        AdoptionRequestAPI.as_view({'get': 'list', 'post': 'create'})),
+    url(r'^adoption-request-api/(?P<id>[0-9]+)/$',
+        AdoptionRequestAPI.as_view({'get': 'retrieve',
+                                    'patch': 'partial_update',
+                                    'delete': 'destroy'})),
     url(r'^person-device-api/$',
         PersonDeviceAPI.as_view({'get': 'list', 'post': 'create'})),
     url(r'^person-device-api/(?P<id>[0-9]+)/$',

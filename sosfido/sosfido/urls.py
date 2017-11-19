@@ -23,4 +23,5 @@ urlpatterns = [
                                namespace='rest_framework')),
     url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
+    url(r'^w/', include('web.urls', namespace='web')),
 ]
